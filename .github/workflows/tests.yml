@@ -8,15 +8,46 @@ jobs:
   phpunit:
     runs-on: ubuntu-latest
 
+    # Mirrors docker/docker-compose.dev.yaml's throwaway local MariaDB + InfluxDB:
+    # FroggitServiceTest::testPersist and DataViewControllerTest need a real,
+    # reachable MariaDB/InfluxDB (see AGENTS.md "Testing"), not just non-empty URLs.
+    # OPENHAB_URL stays empty on purpose — that sink is disabled during tests.
+    services:
+      mariadb:
+        image: mariadb:12.1.2
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: froggit
+          MARIADB_USER: froggit
+          MARIADB_PASSWORD: froggit
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+      influxdb:
+        image: influxdb:2.7
+        env:
+          DOCKER_INFLUXDB_INIT_MODE: setup
+          DOCKER_INFLUXDB_INIT_USERNAME: admin
+          DOCKER_INFLUXDB_INIT_PASSWORD: dev-password
+          DOCKER_INFLUXDB_INIT_ORG: froggit
+          DOCKER_INFLUXDB_INIT_BUCKET: froggit
+          DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: dev-token
+        ports:
+          - 8086:8086
+
     env:
       APP_ENV: test
-      # Disable external sinks so tests don't need a real MariaDB/InfluxDB/openHAB
-      # (mirrors docker/docker-compose.dev.yaml's override pattern for OPENHAB_URL).
-      MYSQL_URL: ''
-      INFLUXDB_URL: ''
-      INFLUXDB_TOKEN: ''
-      INFLUXDB_ORG: ''
-      INFLUXDB_BUCKET: ''
+      MYSQL_URL: mysql://froggit:froggit@127.0.0.1:3306/froggit?serverVersion=12.1.2-MariaDB
+      MYSQL_TABLE: data
+      INFLUXDB_URL: http://127.0.0.1:8086
+      INFLUXDB_TOKEN: dev-token
+      INFLUXDB_ORG: froggit
+      INFLUXDB_BUCKET: froggit
       OPENHAB_URL: ''
       OPENHAB_TOKEN: ''
 
@@ -33,6 +64,21 @@ jobs:
 
       - name: Install dependencies
         uses: ramsey/composer-install@v3
+
+      - name: Wait for InfluxDB
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8086/health && exit 0
+            sleep 2
+          done
+          echo "InfluxDB did not become healthy in time" >&2
+          exit 1
+
+      # Creates the data_froggit table LoadFixturesCommand/tests need (DataWriter
+      # no longer creates tables lazily) and seeds sample rows; also retries its
+      # own MariaDB connection a few times in case the service is still starting.
+      - name: Seed test data
+        run: php bin/console app:fixtures:load
 
       - name: Run tests
         run: vendor/bin/phpunit

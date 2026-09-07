@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Service;
 
-use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
 use Throwable;
 use App\Service\InfluxService;
 use DateTime;
@@ -35,7 +34,6 @@ final class InfluxServiceTest extends TestCase
     /**
      * @throws Throwable
      */
-    #[DoesNotPerformAssertions]
     public function testFlushSwallowsWriteFailureByDefault(): void
     {
         $influxService = $this->serviceWithUnreachableUrl();
