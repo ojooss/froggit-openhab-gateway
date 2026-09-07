@@ -96,3 +96,6 @@ reason, and never throws an exception there.
 The MariaDB and InfluxDB instances used here may also be shared with other consumers
 (e.g. scheduled jobs, Grafana dashboards) that read `data_froggit` directly – so `MYSQL_TABLE`
 must stay at its default (`data`) unless those consumers are updated too.
+
+<!-- CI test: verifying branch protection status checks -->
+
