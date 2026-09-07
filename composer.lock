@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e90aab4af66fc09f8135f5157a06b374",
+    "content-hash": "faa58021aea885eba7d3a3b9186835b5",
     "packages": [
         {
             "name": "bretrzaun/statuspage",
@@ -7263,16 +7263,16 @@
         },
         {
             "name": "symfony/phpunit-bridge",
-            "version": "v8.0.14",
+            "version": "v8.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/phpunit-bridge.git",
-                "reference": "8e48ad61e2f9c5166d51d2352b862caf9de09425"
+                "reference": "abd3c4e35f06f98bc6e5e07c81f948bc77cd39bd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/phpunit-bridge/zipball/8e48ad61e2f9c5166d51d2352b862caf9de09425",
-                "reference": "8e48ad61e2f9c5166d51d2352b862caf9de09425",
+                "url": "https://api.github.com/repos/symfony/phpunit-bridge/zipball/abd3c4e35f06f98bc6e5e07c81f948bc77cd39bd",
+                "reference": "abd3c4e35f06f98bc6e5e07c81f948bc77cd39bd",
                 "shasum": ""
             },
             "require": {
@@ -7324,7 +7324,7 @@
                 "testing"
             ],
             "support": {
-                "source": "https://github.com/symfony/phpunit-bridge/tree/v8.0.14"
+                "source": "https://github.com/symfony/phpunit-bridge/tree/v8.1.6"
             },
             "funding": [
                 {
@@ -7344,7 +7344,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-06-09T10:20:00+00:00"
+            "time": "2026-08-30T18:28:51+00:00"
         },
         {
             "name": "theseer/tokenizer",
