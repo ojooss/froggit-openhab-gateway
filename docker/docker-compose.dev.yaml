@@ -1,0 +1,65 @@
+# Local development/test environment, without dependency on the Hub network.
+# Run from the docker/ directory:
+#   cd docker
+#   docker compose -f docker-compose.yaml -f docker-compose.dev.yaml up -d --build
+#   docker compose -f docker-compose.yaml -f docker-compose.dev.yaml exec froggit-gateway composer install
+#   docker compose -f docker-compose.yaml -f docker-compose.dev.yaml exec froggit-gateway composer test
+#   docker compose -f docker-compose.yaml -f docker-compose.dev.yaml exec froggit-gateway composer phpstan
+#
+# `fixtures` seeds sample Froggit readings into MariaDB/InfluxDB (see
+# LoadFixturesCommand) so /data/view has something to show. It runs once as
+# part of `up` (and is safe to re-run — the seeded rows use fixed timestamps,
+# so re-running just upserts the same data instead of duplicating it), but on
+# a fresh checkout it needs `vendor/` to already exist, so run `composer
+# install` first and then bring it up again:
+#   docker compose -f docker-compose.yaml -f docker-compose.dev.yaml up -d fixtures
+services:
+  froggit-gateway:
+    image: froggit-openhab-gateway:dev
+    ports:
+      - "8080:80"
+    environment: &app_env
+      - MYSQL_URL=mysql://froggit:froggit@mariadb:3306/froggit?serverVersion=12.1.2-MariaDB
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_ORG=froggit
+      - INFLUXDB_BUCKET=froggit
+      - INFLUXDB_TOKEN=dev-token
+      # No real openHAB instance in this dev stack — left empty (= disabled sink, see
+      # OpenHabPublisher). Override with -e OPENHAB_URL=... to test against a real one.
+      - OPENHAB_URL=
+      - OPENHAB_TOKEN=
+    depends_on:
+      - mariadb
+      - influxdb
+
+  fixtures:
+    image: froggit-openhab-gateway:dev
+    volumes:
+      - "../:/var/www/html:cached"
+    environment: *app_env
+    command: ["php", "bin/console", "app:fixtures:load"]
+    restart: "no"
+    depends_on:
+      - froggit-gateway
+      - mariadb
+      - influxdb
+
+  mariadb:
+    image: mariadb:12.1.2
+    restart: unless-stopped
+    environment:
+      - MARIADB_ROOT_PASSWORD=root
+      - MARIADB_DATABASE=froggit
+      - MARIADB_USER=froggit
+      - MARIADB_PASSWORD=froggit
+
+  influxdb:
+    image: influxdb:2.7
+    restart: unless-stopped
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=dev-password
+      - DOCKER_INFLUXDB_INIT_ORG=froggit
+      - DOCKER_INFLUXDB_INIT_BUCKET=froggit
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=dev-token

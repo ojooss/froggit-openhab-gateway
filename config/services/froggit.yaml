@@ -1,0 +1,43 @@
+parameters:
+    froggit:
+        convert_enabled: '%env(bool:FROGGIT_CONVERT_ENABLED)%'
+        mapping:
+            phpunit: php-unit
+            baromrelin: barometer
+            dailyrainin: rain-daily
+            eventrainin: rain-event
+            hourlyrainin: rain-hourly
+            humidity: humidity-out
+            maxdailygust: wind-gust-max-day
+            rainratein: rain-rate
+            soilmoisture1: soil-moisture-1
+            soilmoisture2: soil-moisture-2
+            soilmoisture3: soil-moisture-3
+            tempf: temperature-out
+            uv: uv
+            winddir_avg10m: wind-direction-avg10m
+            windspdmph_avg10m: wind-speed-avg10m
+            windgustmph: wind-gust
+            tempinf: temperature-living
+            humidityin: humidity-living
+            temp1f: temperature-roof
+            humidity1: humidity-roof
+            temp2f: temperature-garage
+            humidity2: humidity-garage
+            temp3f: temperature-basement
+            humidity3: humidity-basement
+            solarradiation: solar-radiation
+        convert:
+            baromrelin: convertBarometer
+            dailyrainin: convertRain
+            eventrainin: convertRain
+            hourlyrainin: convertRain
+            maxdailygust: convertWind
+            tempf: convertTemperature
+            windspdmph_avg10m: convertWind
+            windgustmph: convertWind
+            tempinf: convertTemperature
+            temp1f: convertTemperature
+            temp2f: convertTemperature
+            temp3f: convertTemperature
+            solarradiation: convertSolarRadiation

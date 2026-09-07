@@ -1,0 +1,10 @@
+services:
+  froggit-gateway:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Berlin}
+    volumes:
+      - "../:/var/www/html:cached"

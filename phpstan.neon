@@ -1,0 +1,6 @@
+parameters:
+    phpVersion: 80400
+    level: 6
+    paths:
+        - src
+        - tests

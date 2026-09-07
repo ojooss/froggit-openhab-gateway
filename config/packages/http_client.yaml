@@ -1,0 +1,5 @@
+framework:
+    http_client:
+        scoped_clients:
+            openhab.client:
+                base_uri: '%env(resolve:OPENHAB_URL)%'

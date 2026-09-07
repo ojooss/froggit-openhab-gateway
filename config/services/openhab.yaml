@@ -1,0 +1,33 @@
+parameters:
+    openhab:
+        base_url: '%env(resolve:OPENHAB_URL)%'
+        token: '%env(OPENHAB_TOKEN)%'
+        # Sensor key (value from froggit.mapping) -> openHAB item name.
+        # PLACEHOLDER: item names must be filled in once they are finalized in openHAB
+        # (see PLAN.md, section 8, open point #2).
+        mapping:
+            php-unit: Weather_Php_Unit
+            barometer: Weather_Barometer
+            rain-daily: Weather_Rain_Daily
+            rain-event: Weather_Rain_Event
+            rain-hourly: Weather_Rain_Hourly
+            humidity-out: Weather_Humidity_Out
+            wind-gust-max-day: Weather_Wind_Gust_Max_Day
+            rain-rate: Weather_Rain_Rate
+            soil-moisture-1: Weather_Soil_Moisture_1
+            soil-moisture-2: Weather_Soil_Moisture_2
+            soil-moisture-3: Weather_Soil_Moisture_3
+            temperature-out: Weather_Temperature_Out
+            uv: Weather_Uv
+            wind-direction-avg10m: Weather_Wind_Direction_Avg10m
+            wind-speed-avg10m: Weather_Wind_Speed_Avg10m
+            wind-gust: Weather_Wind_Gust
+            temperature-living: Weather_Temperature_Living
+            humidity-living: Weather_Humidity_Living
+            temperature-roof: Weather_Temperature_Roof
+            humidity-roof: Weather_Humidity_Roof
+            temperature-garage: Weather_Temperature_Garage
+            humidity-garage: Weather_Humidity_Garage
+            temperature-basement: Weather_Temperature_Basement
+            humidity-basement: Weather_Humidity_Basement
+            solar-radiation: Weather_Solar_Radiation
