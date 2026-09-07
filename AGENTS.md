@@ -164,3 +164,16 @@ via `static::getContainer()->set(...)` to exercise the "one configured sink fail
 `influxdata/influxdb-client-php` (it needs a PSR-17 factory implementation to construct its write/query
 API clients) — without it, every InfluxDB write silently failed with a `DiscoveryFailedException` that
 only surfaced once `InfluxService::flush(throwOnFailure: true)` stopped swallowing it.
+
+### CI
+
+`.github/workflows/tests.yml` runs on every push/PR and mirrors `docker-compose.dev.yaml`'s throwaway
+dev stack rather than disabling the sinks: it spins up `mariadb`/`influxdb` service containers with the
+same credentials (`froggit`/`froggit`/`froggit` db, `dev-token`/`froggit` org+bucket), waits for InfluxDB
+to answer `/health`, then runs `php bin/console app:fixtures:load` to create `data_froggit` (via
+`LoadFixturesCommand::ensureTableExists()`, since `DataWriter` no longer creates tables lazily — see
+above) and seed it, before `vendor/bin/phpunit`. `OPENHAB_URL` stays empty, same as the dev stack, so
+that sink is disabled in CI too. This is required, not just nice-to-have: `FroggitServiceTest::testPersist`
+and the `DataViewControllerTest` sink tests need a real, reachable MariaDB/InfluxDB and a pre-existing
+table — an earlier version of the workflow blanked `MYSQL_URL`/`INFLUXDB_URL` to avoid needing external
+services, which broke those tests instead.
