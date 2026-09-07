@@ -63,7 +63,7 @@ jobs:
           coverage: none
 
       - name: Install dependencies
-        uses: ramsey/composer-install@v3
+        uses: ramsey/composer-install@v4
 
       - name: Wait for InfluxDB
         run: |
