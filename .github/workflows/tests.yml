@@ -1,0 +1,38 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+
+    env:
+      APP_ENV: test
+      # Disable external sinks so tests don't need a real MariaDB/InfluxDB/openHAB
+      # (mirrors docker/docker-compose.dev.yaml's override pattern for OPENHAB_URL).
+      MYSQL_URL: ''
+      INFLUXDB_URL: ''
+      INFLUXDB_TOKEN: ''
+      INFLUXDB_ORG: ''
+      INFLUXDB_BUCKET: ''
+      OPENHAB_URL: ''
+      OPENHAB_TOKEN: ''
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ctype, iconv, pdo_mysql
+          coverage: none
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@v3
+
+      - name: Run tests
+        run: vendor/bin/phpunit
