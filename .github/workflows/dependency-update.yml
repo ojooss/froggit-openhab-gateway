@@ -1,0 +1,52 @@
+name: Dependency update
+
+on:
+  schedule:
+    - cron: "0 5 1 * *" # monthly, 1st at 05:00 UTC
+  workflow_dispatch:
+
+jobs:
+  composer-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: ctype, iconv, pdo_mysql
+          coverage: none
+
+      - name: Composer update
+        run: composer update --no-interaction
+
+      # Uses a PAT (not GITHUB_TOKEN) on purpose: a push/PR made with the default
+      # GITHUB_TOKEN doesn't trigger other workflows, so tests.yml's required checks
+      # would never run on this PR and auto-merge below would wait forever.
+      - name: Open pull request
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.DEPENDENCY_UPDATE_PAT }}
+          commit-message: "Update Composer dependencies"
+          title: "Update Composer dependencies"
+          body: |
+            Automated monthly `composer update`, opened by the `dependency-update` workflow.
+
+            Merges automatically once phpunit/phpstan/rector/composer-audit pass (auto-merge
+            is enabled below); a merge from this branch then tags a new patch release, which
+            triggers a fresh Docker image publish.
+          branch: chore/composer-update
+          delete-branch: true
+
+      - name: Enable auto-merge
+        if: steps.cpr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ secrets.DEPENDENCY_UPDATE_PAT }}
+        run: gh pr merge --auto --squash "${{ steps.cpr.outputs.pull-request-number }}"

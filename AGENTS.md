@@ -191,3 +191,19 @@ standalone — and pushes it to `ghcr.io/ojooss/froggit-openhab-gateway` tagged 
 pushed tag is the highest released version (`docker/metadata-action`'s `flavor: latest=auto` compares
 SemVer rather than just tagging whatever was pushed most recently) — a `v*-rc`/`-beta` pre-release, or a
 patch pushed after a newer version already went out, won't move `latest` backwards or to a pre-release.
+
+**Automated dependency releases:** `dependency-update.yml` runs monthly (1st at 05:00 UTC, plus
+`workflow_dispatch`), does `composer update`, and — only if that actually changed `composer.lock` —
+opens/updates a PR on a fixed `chore/composer-update` branch and enables auto-merge on it. That PR uses
+a PAT (`secrets.DEPENDENCY_UPDATE_PAT`, a fine-grained token scoped to just this repo) instead of the
+default `GITHUB_TOKEN` on purpose: a push/PR made with `GITHUB_TOKEN` doesn't trigger other workflows
+(GitHub's loop-prevention), so `tests.yml`'s required checks would never run on it and auto-merge would
+wait forever. Once phpunit/phpstan/rector/composer-audit all pass, GitHub merges it automatically; that
+merge (detected via `tag-after-dependency-update.yml`'s `pull_request: closed` trigger, filtered to
+`head.ref == 'chore/composer-update'` and `merged == true`) computes the next patch version from the
+highest existing `vX.Y.Z` tag and pushes it — which feeds into the exact same tag-triggered release
+path described above (tests re-run on the tag, then `docker-publish`, then the GitHub Release). No
+human step in between: a routine dependency bump becomes a new release and image on its own, as long as
+all checks stay green. Requires `allow_auto_merge` enabled on the repo (already done via the API) and
+the `DEPENDENCY_UPDATE_PAT` secret to exist — without that secret, `composer-update`'s PR-creation step
+fails.

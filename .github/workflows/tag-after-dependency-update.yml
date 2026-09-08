@@ -1,0 +1,37 @@
+name: Tag release after dependency update
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+jobs:
+  tag:
+    # Only for the dependency-update workflow's own PR, and only if it actually merged
+    # (not just closed) — required checks already ran and passed on this exact commit
+    # before merge (branch protection's "strict" status checks + auto-merge), so there's
+    # no need to re-verify anything here, just cut the release.
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'chore/composer-update'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Compute next patch version and tag
+        run: |
+          latest=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)
+          if [ -z "$latest" ]; then
+            next="v0.1.0"
+          else
+            IFS='.' read -r major minor patch <<< "${latest#v}"
+            next="v${major}.${minor}.$((patch + 1))"
+          fi
+          echo "Tagging $next"
+          git tag -a "$next" -m "$next (automated dependency update)"
+          git push origin "$next"
