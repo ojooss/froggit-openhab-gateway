@@ -185,6 +185,9 @@ phpstan, rector, composer-audit]`, gated by `if: startsWith(github.ref, 'refs/ta
 on a plain `master` push). That job builds `docker/Dockerfile`'s `prod` target — unlike the `dev` target
 used by both `docker-compose.yaml`/`docker-compose.dev.yaml`, which relies on the app code being
 bind-mounted in, `prod` bakes the app and its `--no-dev` Composer dependencies into the image so it runs
-standalone — and pushes it to `ghcr.io/ojooss/froggit-openhab-gateway` tagged `X.Y.Z`, `X.Y`, `latest`,
-and `sha-<short-sha>`, then creates a GitHub Release for the tag with `gh release create --generate-notes`
-(auto-generated notes from PRs merged since the last tag).
+standalone — and pushes it to `ghcr.io/ojooss/froggit-openhab-gateway` tagged `X.Y.Z`, `X.Y`, and
+`sha-<short-sha>`, then creates a GitHub Release for the tag with `gh release create --generate-notes`
+(auto-generated notes from PRs merged since the last tag). It's also tagged `latest`, but only if the
+pushed tag is the highest released version (`docker/metadata-action`'s `flavor: latest=auto` compares
+SemVer rather than just tagging whatever was pushed most recently) — a `v*-rc`/`-beta` pre-release, or a
+patch pushed after a newer version already went out, won't move `latest` backwards or to a pre-release.
