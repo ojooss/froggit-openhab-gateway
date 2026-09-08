@@ -1,0 +1,10 @@
+.env.test
+.git
+.github
+.idea
+.phpunit.cache
+docker
+!docker/apache.conf
+tests
+var
+vendor

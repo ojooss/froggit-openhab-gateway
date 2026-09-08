@@ -3,6 +3,7 @@ services:
     build:
       context: ../
       dockerfile: docker/Dockerfile
+      target: dev
     restart: unless-stopped
     environment:
       - TZ=${TZ:-Europe/Berlin}

@@ -39,6 +39,15 @@ docker compose up -d --build
 docker compose exec froggit-gateway composer install
 ```
 
+**Prebuilt image**: a standalone image (app + dependencies baked in, no bind mount needed) is
+published to GHCR on every push to `master` and on version tags:
+
+```bash
+docker run -d -p 80:80 \
+  -e MYSQL_URL=... -e INFLUXDB_URL=... -e OPENHAB_URL=... \
+  ghcr.io/ojooss/froggit-openhab-gateway:latest
+```
+
 Configuration is handled via environment variables (see `.env` for defaults, `.env.local` for
 real credentials):
 
