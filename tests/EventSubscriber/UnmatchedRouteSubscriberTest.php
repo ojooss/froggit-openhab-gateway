@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\EventSubscriber;
 
+use Throwable;
 use App\EventSubscriber\UnmatchedRouteSubscriber;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -54,7 +55,7 @@ final class UnmatchedRouteSubscriberTest extends TestCase
         $subscriber->onKernelException($this->exceptionEvent($request, new RuntimeException('boom')));
     }
 
-    private function exceptionEvent(Request $request, \Throwable $throwable): ExceptionEvent
+    private function exceptionEvent(Request $request, Throwable $throwable): ExceptionEvent
     {
         $kernel = $this->createStub(HttpKernelInterface::class);
 
