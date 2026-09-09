@@ -45,6 +45,27 @@ final class FroggitControllerTest extends WebTestCase
     }
 
     /**
+     * The route path itself is configurable via the FROGGIT_ROUTE env var (on top
+     * of the always-on /froggit and /data/report/ routes) — .env.test sets it to
+     * /froggit-configured, distinct from both fixed paths, to prove the override
+     * actually reaches the router rather than just falling back to a fixed path.
+     *
+     * @throws JsonException
+     */
+    public function testConfiguredRoute(): void
+    {
+        $client = self::createClient();
+        $client->request(Request::METHOD_GET, '/froggit-configured', [
+            'phpunit' => 12.345
+        ]);
+        $this->assertResponseIsSuccessful();
+        $content = $client->getResponse()->getContent();
+        $json = json_decode($content, false, 512, JSON_THROW_ON_ERROR);
+        $this->assertNotNull($json);
+        $this->assertEquals('ok', $json->message);
+    }
+
+    /**
      * "All or nothing": a single failing (but configured) sink must make the
      * whole response count as an error, even if the other sinks succeed.
      *

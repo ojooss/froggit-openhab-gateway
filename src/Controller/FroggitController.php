@@ -37,6 +37,7 @@ class FroggitController extends AbstractController
      */
     #[Route('/froggit', name: 'app_froggit')]
     #[Route('/data/report/', name: 'app_froggit_data_report')]
+    #[Route('%froggit_route%', name: 'app_froggit_configured')]
     public function index(Request $request): JsonResponse
     {
         try {

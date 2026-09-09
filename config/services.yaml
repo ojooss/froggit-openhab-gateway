@@ -13,6 +13,10 @@ parameters:
         token: '%env(resolve:INFLUXDB_TOKEN)%'
         org: '%env(resolve:INFLUXDB_ORG)%'
         bucket: '%env(resolve:INFLUXDB_BUCKET)%'
+    # Extra Froggit endpoint path, on top of the fixed /froggit and /data/report/
+    # routes — lets the station's configured "custom server" path be changed via
+    # env var alone (no redeploy) if it ever drifts from those fixed paths.
+    froggit_route: '%env(FROGGIT_ROUTE)%'
 
 services:
     # default configuration for services in *this* file

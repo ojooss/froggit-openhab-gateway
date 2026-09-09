@@ -87,7 +87,10 @@ run `composer install` after cloning or after any dependency change. `var/` is a
 
 ## Architecture
 
-- `src/Controller/FroggitController.php` — HTTP endpoint (`/froggit`, `/data/report/`).
+- `src/Controller/FroggitController.php` — HTTP endpoint (`/froggit`, `/data/report/`, plus an
+  extra `FROGGIT_ROUTE`-configurable path — see `config/services.yaml`'s `froggit_route`
+  parameter — in case the station's configured "custom server" path drifts from those two fixed
+  ones and needs to change without a redeploy).
 - `src/Service/FroggitService.php` — maps/converts raw Froggit sensor keys into `{ sensor => value }`.
 - `src/Service/DataWriter.php` + `InfluxService.php` — based on the Hub's originals (dual-write to
   MariaDB via `<MYSQL_TABLE>_<collection>` tables, prefix `data` by default, and InfluxDB), but

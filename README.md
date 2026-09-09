@@ -51,13 +51,14 @@ docker run -d -p 80:80 \
 Configuration is handled via environment variables (see `.env` for defaults, `.env.local` for
 real credentials):
 
-| Variable                                                            | Purpose                                                       |
-|---------------------------------------------------------------------|---------------------------------------------------------------|
-| `MYSQL_URL`                                                         | MariaDB connection; empty = sink disabled                     |
-| `MYSQL_TABLE`                                                       | MariaDB table name prefix (default: `data`); actual table per collection is `<MYSQL_TABLE>_<collection>` |
-| `INFLUXDB_URL`, `INFLUXDB_TOKEN`, `INFLUXDB_ORG`, `INFLUXDB_BUCKET` | InfluxDB connection; `INFLUXDB_URL` empty = sink disabled     |
-| `OPENHAB_URL`, `OPENHAB_TOKEN`                                      | openHAB REST API; `OPENHAB_URL` empty = sink disabled         |
-| `FROGGIT_CONVERT_ENABLED`                                           | `1`/`0` – convert imperial units to metric (default: enabled) |
+| Variable                                                            | Purpose                                                                                                                       |
+|---------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| `MYSQL_URL`                                                         | MariaDB connection; empty = sink disabled                                                                                     |
+| `MYSQL_TABLE`                                                       | MariaDB table name prefix (default: `data`); actual table per collection is `<MYSQL_TABLE>_<collection>`                      |
+| `INFLUXDB_URL`, `INFLUXDB_TOKEN`, `INFLUXDB_ORG`, `INFLUXDB_BUCKET` | InfluxDB connection; `INFLUXDB_URL` empty = sink disabled                                                                     |
+| `OPENHAB_URL`, `OPENHAB_TOKEN`                                      | openHAB REST API; `OPENHAB_URL` empty = sink disabled                                                                         |
+| `FROGGIT_CONVERT_ENABLED`                                           | `1`/`0` – convert imperial units to metric (default: enabled)                                                                 |
+| `FROGGIT_ROUTE`                                                     | Extra path the Froggit endpoint listens on, on top of the always-on `/froggit` and `/data/report/` (default: `/data/report/`) |
 
 Sensor and item mappings live in `config/services/froggit.yaml` (Froggit raw key → sensor name,
 including unit conversion) and `config/services/openhab.yaml` (sensor name → openHAB item name).
@@ -67,13 +68,15 @@ including unit conversion) and `config/services/openhab.yaml` (sensor name → o
 | Route                                    | Purpose                                                                                                                                                                                                                                                                                                                 |
 |------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `GET`/`POST` `/froggit`, `/data/report/` | Callback endpoint for the weather station. Accepts the raw values as query or POST parameters, converts them, and writes them to every configured sink. Response: `200 {"message": "ok"}` on full success, `500 {"message": "sink(s) failed: ..."}` if at least one configured sink fails, `400` on missing parameters. |
-| `GET` `/setup`                           | Creates any missing `<MYSQL_TABLE>_<collection>` tables in MariaDB and, for existing tables, reports any column drift (missing/extra/mismatched type) against the expected schema. Does not automatically migrate drifted tables.                                                                                                |
+| `GET` `/setup`                           | Creates any missing `<MYSQL_TABLE>_<collection>` tables in MariaDB and, for existing tables, reports any column drift (missing/extra/mismatched type) against the expected schema. Does not automatically migrate drifted tables.                                                                                       |
 | `GET` `/status`                          | Status page (HTML) that runs a health check for each configured sink (DB connection, InfluxDB `/health`, openHAB `/rest`) and returns `503` as soon as one check fails.                                                                                                                                                 |
 | `GET` `/data/view`                       | HTML form for browsing stored readings: pick a time range, one configured sink (MariaDB or InfluxDB), and a collection, and view the matching rows as a table.                                                                                                                                                          |
 
 The weather station must be configured to send its custom-server upload requests to
 `/data/report/` on this application (Froggit stations use this path format by default for
-"Ecowitt-compatible" custom-server uploads).
+"Ecowitt-compatible" custom-server uploads). If the station ever needs a different path, set
+`FROGGIT_ROUTE` (see the table in section 2) to add it as a third listening path, no code change
+needed.
 
 ## 4) Architecture & Data Flow
 
