@@ -85,6 +85,25 @@ user's other projects) rather than baked into the image — `vendor/` therefore 
 run `composer install` after cloning or after any dependency change. `var/` is an anonymous volume
 (container-only) so cache/logs generated inside the container don't leak onto the host bind mount.
 
+## Quality Gate
+
+After changing any file under `src/`, `tests/`, `config/`, or `composer.json`/`composer.lock`, run
+the full quality gate below before treating the change as done — it mirrors the four required jobs
+in `.github/workflows/tests.yml` (`phpunit`, `phpstan`, `rector`, `composer-audit`), so a change that
+passes locally should pass CI too. A doc-only change (e.g. editing this file) doesn't need it.
+
+```bash
+cd docker
+docker compose -f docker-compose.yaml -f docker-compose.dev.yaml exec froggit-gateway composer test
+docker compose -f docker-compose.yaml -f docker-compose.dev.yaml exec froggit-gateway composer phpstan
+docker compose -f docker-compose.yaml -f docker-compose.dev.yaml exec froggit-gateway composer rector:dry
+docker compose -f docker-compose.yaml -f docker-compose.dev.yaml exec froggit-gateway composer audit
+```
+
+Use `rector:dry`, not `rector` — the dry-run is what CI checks; the non-dry version rewrites files
+in place. `composer audit` has no entry in `composer.json`'s `scripts` block because it's a built-in
+Composer subcommand, not a project script.
+
 ## Architecture
 
 - `src/Controller/FroggitController.php` — HTTP endpoint (`/froggit`, `/data/report/`, plus an
