@@ -43,7 +43,7 @@ class FroggitService
             if ($index = $this->map($key)) {
                 $workload[$index] = $this->convert($key, $value);
             } else {
-                $this->froggitLogger->debug('skipping parameter', [$key => $value]);
+                $this->froggitLogger->info('skipping parameter', [$key => $value]);
             }
         }
 

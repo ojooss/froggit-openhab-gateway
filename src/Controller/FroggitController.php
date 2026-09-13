@@ -34,6 +34,10 @@ class FroggitController extends AbstractController
      * nothing": the response is only 200 "ok" if every sink actually attempted
      * succeeded; if even one fails, 500 is returned
      * (see PLAN.md, section 7).
+     *
+     * Within the openHAB sink itself, a single item failing (HTTP status >= 300, e.g. a
+     * not-yet-existing item) is only logged and does not mark the sink as failed or block
+     * the remaining items — only a connection failure to openHAB itself does.
      */
     #[Route('/froggit', name: 'app_froggit')]
     #[Route('/data/report/', name: 'app_froggit_data_report')]

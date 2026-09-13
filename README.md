@@ -61,7 +61,9 @@ real credentials):
 | `FROGGIT_ROUTE`                                                     | Extra path the Froggit endpoint listens on, on top of the always-on `/froggit` and `/data/report/` (default: `/data/report/`) |
 
 Sensor and item mappings live in `config/services/froggit.yaml` (Froggit raw key → sensor name,
-including unit conversion) and `config/services/openhab.yaml` (sensor name → openHAB item name).
+including unit conversion) and `config/services/openhab.yaml` (sensor name → `{ item, enabled }`).
+Setting `enabled: false` on a mapping entry documents a target openHAB item name without actually
+sending to it yet, e.g. while the item doesn't exist in openHAB yet.
 
 ## 3) Usage / API Endpoints
 
@@ -96,7 +98,10 @@ FroggitService  ── maps raw keys → sensor names, converts units
 
 Each sink is handled with its own try/catch block and logged individually in
 `FroggitController::index()`; a failure in one sink does not block the others. Only at the end
-is it decided whether the overall response is `200` or `500`.
+is it decided whether the overall response is `200` or `500`. Within the openHAB sink itself, an
+individual item failing (HTTP status >= 300, e.g. a not-yet-existing item) is only logged and
+blocks neither the other items nor the openHAB sink as a whole — only a connection failure to
+openHAB itself does that.
 
 Important for InfluxDB writes: `InfluxService::write()` only buffers data points in memory –
 only `flush()` actually sends them over the network. The controller calls `flush()`

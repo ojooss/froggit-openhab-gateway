@@ -2,32 +2,36 @@ parameters:
     openhab:
         base_url: '%env(resolve:OPENHAB_URL)%'
         token: '%env(OPENHAB_TOKEN)%'
-        # Sensor key (value from froggit.mapping) -> openHAB item name.
-        # PLACEHOLDER: item names must be filled in once they are finalized in openHAB
-        # (see PLAN.md, section 8, open point #2).
+        # Sensor key (value from froggit.mapping) -> { item, enabled }.
+        # `item` is the openHAB item name. `enabled` (default true) can be set to `false`
+        # to document a target item name without actually sending to it yet, e.g. because
+        # the item doesn't exist in openHAB yet. A 404/other error response for a single
+        # item is only logged (see OpenHabPublisher::publish()) and never blocks the other
+        # items, but if an item is known to be persistently failing, set `enabled: false`
+        # here instead of removing the mapping entry.
         mapping:
-            php-unit: Weather_Php_Unit
-            barometer: Weather_Barometer
-            rain-daily: Weather_Rain_Daily
-            rain-event: Weather_Rain_Event
-            rain-hourly: Weather_Rain_Hourly
-            humidity-out: Weather_Humidity_Out
-            wind-gust-max-day: Weather_Wind_Gust_Max_Day
-            rain-rate: Weather_Rain_Rate
-            soil-moisture-1: Weather_Soil_Moisture_1
-            soil-moisture-2: Weather_Soil_Moisture_2
-            soil-moisture-3: Weather_Soil_Moisture_3
-            temperature-out: Weather_Temperature_Out
-            uv: Weather_Uv
-            wind-direction-avg10m: Weather_Wind_Direction_Avg10m
-            wind-speed-avg10m: Weather_Wind_Speed_Avg10m
-            wind-gust: Weather_Wind_Gust
-            temperature-living: Weather_Temperature_Living
-            humidity-living: Weather_Humidity_Living
-            temperature-roof: Weather_Temperature_Roof
-            humidity-roof: Weather_Humidity_Roof
-            temperature-garage: Weather_Temperature_Garage
-            humidity-garage: Weather_Humidity_Garage
-            temperature-basement: Weather_Temperature_Basement
-            humidity-basement: Weather_Humidity_Basement
-            solar-radiation: Weather_Solar_Radiation
+            barometer: { item: Weather_Barometer }
+            humidity-basement: { item: Weather_Humidity_Basement }
+            humidity-garage: { item: Weather_Humidity_Garage }
+            humidity-living: { item: Weather_Humidity_Living }
+            humidity-out: { item: Weather_Humidity_Out }
+            humidity-roof: { item: Weather_Humidity_Roof }
+            php-unit: { item: Weather_Php_Unit }
+            rain-daily: { item: Weather_Rain_Daily }
+            rain-event: { item: Weather_Rain_Event }
+            rain-hourly: { item: Weather_Rain_Hourly }
+            rain-rate: { item: Weather_Rain_Rate }
+            soil-moisture-1: { item: Weather_Soil_Moisture_1 }
+            soil-moisture-2: { item: Weather_Soil_Moisture_2 }
+            soil-moisture-3: { item: Weather_Soil_Moisture_3 }
+            solar-radiation: { item: Weather_Solar_Radiation }
+            temperature-basement: { item: Weather_Temperature_Basement }
+            temperature-garage: { item: Weather_Temperature_Garage }
+            temperature-living: { item: Weather_Temperature_Living }
+            temperature-out: { item: Weather_Temperature_Out }
+            temperature-roof: { item: Weather_Temperature_Roof }
+            uv: { item: Weather_Uv, enabled: false }
+            wind-direction-avg10m: { item: Weather_Wind_Direction_Avg10m }
+            wind-gust-max-day: { item: Weather_Wind_Gust_Max_Day }
+            wind-gust: { item: Weather_Wind_Gust }
+            wind-speed-avg10m: { item: Weather_Wind_Speed_Avg10m }

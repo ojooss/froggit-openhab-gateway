@@ -23,8 +23,8 @@ final class OpenHabPublisherTest extends TestCase
                 'base_url' => 'https://openhab.example.test',
                 'token' => 'test-token',
                 'mapping' => [
-                    'php-unit' => 'Weather_Php_Unit',
-                    'temperature-out' => 'Weather_Temperature_Out',
+                    'php-unit' => ['item' => 'Weather_Php_Unit'],
+                    'temperature-out' => ['item' => 'Weather_Temperature_Out'],
                 ],
             ],
         ]);
@@ -42,11 +42,12 @@ final class OpenHabPublisherTest extends TestCase
         });
 
         $publisher = new OpenHabPublisher($this->config(), $httpClient, new NullLogger());
-        $publisher->publish([
+        $failures = $publisher->publish([
             'php-unit' => 12.345,
             'unknown-sensor' => 1.0,
         ]);
 
+        $this->assertSame([], $failures);
         $this->assertCount(1, $requests);
         $this->assertSame('PUT', $requests[0]['method']);
         $this->assertSame('https://openhab.example.test/rest/items/Weather_Php_Unit/state', $requests[0]['url']);
@@ -64,14 +65,16 @@ final class OpenHabPublisherTest extends TestCase
     /**
      * @throws TransportExceptionInterface
      */
-    public function testThrowsOnErrorResponse(): void
+    public function testReturnsPerItemFailureInsteadOfThrowingOnErrorResponse(): void
     {
         $httpClient = new MockHttpClient(fn(): MockResponse => new MockResponse('', ['http_code' => 500]));
 
         $publisher = new OpenHabPublisher($this->config(), $httpClient, new NullLogger());
 
-        $this->expectException(RuntimeException::class);
-        $publisher->publish(['temperature-out' => 8.5]);
+        $failures = $publisher->publish(['temperature-out' => 8.5]);
+
+        $this->assertSame(['temperature-out' => 500], $failures);
+        $this->assertSame(1, $httpClient->getRequestsCount());
     }
 
     /**
@@ -95,7 +98,7 @@ final class OpenHabPublisherTest extends TestCase
             'openhab' => [
                 'base_url' => '',
                 'token' => '',
-                'mapping' => ['php-unit' => 'Weather_Php_Unit'],
+                'mapping' => ['php-unit' => ['item' => 'Weather_Php_Unit']],
             ],
         ]);
         $httpClient = new MockHttpClient(function (): never {
@@ -105,9 +108,107 @@ final class OpenHabPublisherTest extends TestCase
         $publisher = new OpenHabPublisher($config, $httpClient, new NullLogger());
 
         // Must not throw, even with an empty workload — the sink is simply off.
-        $publisher->publish([]);
-        $publisher->publish(['php-unit' => 12.345]);
+        $this->assertSame([], $publisher->publish([]));
+        $this->assertSame([], $publisher->publish(['php-unit' => 12.345]));
         $this->assertSame(0, $httpClient->getRequestsCount());
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function testContinuesRemainingItemsAfterOneItemGets404OrOtherStatusFailure(): void
+    {
+        $config = new ParameterBag([
+            'openhab' => [
+                'base_url' => 'https://openhab.example.test',
+                'token' => 'test-token',
+                'mapping' => [
+                    'php-unit' => ['item' => 'Weather_Php_Unit'],
+                    'temperature-out' => ['item' => 'Weather_Temperature_Out'],
+                    'barometer' => ['item' => 'Weather_Barometer'],
+                ],
+            ],
+        ]);
+
+        $responses = [
+            new MockResponse('', ['http_code' => 200]),
+            new MockResponse('', ['http_code' => 404]),
+            new MockResponse('', ['http_code' => 200]),
+        ];
+        $httpClient = new MockHttpClient($responses);
+
+        $publisher = new OpenHabPublisher($config, $httpClient, new NullLogger());
+        $failures = $publisher->publish([
+            'php-unit' => 1.0,
+            'temperature-out' => 2.0,
+            'barometer' => 3.0,
+        ]);
+
+        $this->assertSame(3, $httpClient->getRequestsCount());
+        $this->assertSame(['temperature-out' => 404], $failures);
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function testAbortsRemainingItemsAndThrowsOnTransportFailure(): void
+    {
+        $config = new ParameterBag([
+            'openhab' => [
+                'base_url' => 'https://openhab.example.test',
+                'token' => 'test-token',
+                'mapping' => [
+                    'php-unit' => ['item' => 'Weather_Php_Unit'],
+                    'temperature-out' => ['item' => 'Weather_Temperature_Out'],
+                ],
+            ],
+        ]);
+
+        $responses = [
+            new MockResponse('', ['error' => 'simulated transport failure']),
+            new MockResponse('', ['http_code' => 200]),
+        ];
+        $httpClient = new MockHttpClient($responses);
+
+        $publisher = new OpenHabPublisher($config, $httpClient, new NullLogger());
+
+        $this->expectException(TransportExceptionInterface::class);
+        try {
+            $publisher->publish([
+                'php-unit' => 1.0,
+                'temperature-out' => 2.0,
+            ]);
+        } finally {
+            $this->assertSame(1, $httpClient->getRequestsCount());
+        }
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function testSkipsSensorDisabledInMappingWithoutMakingHttpCall(): void
+    {
+        $config = new ParameterBag([
+            'openhab' => [
+                'base_url' => 'https://openhab.example.test',
+                'token' => 'test-token',
+                'mapping' => [
+                    'php-unit' => ['item' => 'Weather_Php_Unit', 'enabled' => false],
+                    'temperature-out' => ['item' => 'Weather_Temperature_Out'],
+                ],
+            ],
+        ]);
+
+        $httpClient = new MockHttpClient(fn(): MockResponse => new MockResponse('', ['http_code' => 200]));
+
+        $publisher = new OpenHabPublisher($config, $httpClient, new NullLogger());
+        $failures = $publisher->publish([
+            'php-unit' => 1.0,
+            'temperature-out' => 2.0,
+        ]);
+
+        $this->assertSame(1, $httpClient->getRequestsCount());
+        $this->assertSame([], $failures);
     }
 
 }

@@ -23,7 +23,9 @@ non-empty string — no separate feature flag:
 - `INFLUXDB_URL` empty → `InfluxService` never constructs the InfluxDB `Client` and every method
   (`write`/`flush`/`read`) becomes a no-op.
 - `OPENHAB_URL` empty → `OpenHabPublisher::publish()` returns immediately (logged at debug level),
-  without validating the workload or attempting any HTTP call.
+  without validating the workload or attempting any HTTP call. `publish()` returns
+  `array<string, int>` (failed sensor => HTTP status) instead of `void` — empty means either full
+  success or a disabled sink; see below for how item-level failures affect this.
 A disabled sink is never counted as a "failed" sink — it's simply skipped, not attempted. This means
 all sinks disabled at once is not an error either (200 "ok", even though nothing was written anywhere).
 
@@ -125,10 +127,18 @@ Composer subcommand, not a project script.
   drifted tables itself — that's intentionally left as a manual/future step once real drift shows up.
   Add new collections to `COLLECTIONS` whenever a new caller starts writing through `DataWriter`.
 - `src/Service/OpenHabPublisher.php` — new; maps sensor keys to openHAB item names
-  (`config/services/openhab.yaml`) and PUTs values to the openHAB REST API.
+  (`config/services/openhab.yaml`) and PUTs values to the openHAB REST API. Inside `publish()`'s
+  loop, a connection failure to openHAB (`TransportExceptionInterface`) still aborts the remaining
+  items and is rethrown as-is, marking the openHAB sink as failed in `FroggitController`. A single
+  item getting an HTTP status >= 300 (e.g. a not-yet-existing item) is instead only logged
+  (`warning`) and collected into the returned array — it neither blocks the other items nor marks
+  the sink as failed.
 - `config/services/froggit.yaml` — Froggit raw-key → sensor-name mapping + unit conversions.
-- `config/services/openhab.yaml` — sensor-name → openHAB item-name mapping. **Contains placeholder
-  item names** until the real openHAB item names are confirmed.
+- `config/services/openhab.yaml` — sensor-name → openHAB item mapping, one `{ item, enabled }` entry
+  per sensor. `enabled` (default `true`) can be set to `false` to document a target item name
+  without actually sending to it yet — e.g. while the item doesn't exist in openHAB yet, or once a
+  given item is observed to be persistently failing in the logs. There is deliberately no automatic
+  exception-list/retry mechanism for failing items; a human is expected to flip `enabled` by hand.
 - `src/Service/DataReader.php` — read-side counterpart to `DataWriter`: reads
   `<MYSQL_TABLE>_<collection>` rows for a time range, in the same return shape as
   `InfluxService::read()`, so both sinks can be displayed the same way. No-ops (like the other
