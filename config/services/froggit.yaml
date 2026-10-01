@@ -1,6 +1,9 @@
 parameters:
     froggit:
         convert_enabled: '%env(bool:FROGGIT_CONVERT_ENABLED)%'
+        # Left = raw Froggit sensor key, as sent by the weather station in the HTTP callback.
+        # Right = internal sensor name used throughout the app (openHAB item mapping in
+        # config/services/openhab.yaml, MariaDB columns in DataWriter, InfluxDB fields in InfluxService).
         mapping:
             phpunit: php-unit
             baromrelin: barometer
@@ -27,6 +30,9 @@ parameters:
             temp3f: temperature-basement
             humidity3: humidity-basement
             solarradiation: solar-radiation
+        # Left = same raw Froggit sensor key as in `mapping` above.
+        # Right = name of the FroggitService conversion method applied to the raw value
+        # before it's passed on under the mapped sensor name.
         convert:
             baromrelin: convertBarometer
             dailyrainin: convertRain
