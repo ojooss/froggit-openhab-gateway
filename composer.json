@@ -21,7 +21,7 @@
         "symfony/framework-bundle": "8.0.*",
         "symfony/http-client": "8.0.*",
         "symfony/monolog-bundle": "^v4.0",
-        "symfony/runtime": "8.0.*",
+        "symfony/runtime": "8.1.*",
         "symfony/twig-bundle": "8.0.*",
         "symfony/yaml": "8.0.*"
     },
