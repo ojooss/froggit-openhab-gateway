@@ -5,28 +5,21 @@ declare(strict_types=1);
 namespace App\EventSubscriber;
 
 use Psr\Log\LoggerInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-readonly class UnmatchedRouteSubscriber implements EventSubscriberInterface
+readonly class UnmatchedRouteSubscriber
 {
-
     public function __construct(
         private LoggerInterface $froggitLogger,
     )
     {
     }
 
-    public static function getSubscribedEvents(): array
-    {
-        return [
-            KernelEvents::EXCEPTION => 'onKernelException',
-        ];
-    }
-
+    #[AsEventListener(event: KernelEvents::EXCEPTION)]
     public function onKernelException(ExceptionEvent $event): void
     {
         $throwable = $event->getThrowable();
@@ -45,5 +38,4 @@ readonly class UnmatchedRouteSubscriber implements EventSubscriberInterface
             ]
         );
     }
-
 }
