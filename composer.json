@@ -15,7 +15,7 @@
         "influxdata/influxdb-client-php": "^3.8",
         "nyholm/psr7": "^1.8",
         "symfony/console": "8.0.*",
-        "symfony/dotenv": "8.0.*",
+        "symfony/dotenv": "8.1.*",
         "symfony/flex": "^v2.10",
         "symfony/form": "8.0.*",
         "symfony/framework-bundle": "8.0.*",
